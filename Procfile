@@ -1,1 +1,1 @@
-web: gunicorn utnapiv1:app
+web: gunicorn utnapi:app
