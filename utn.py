@@ -1,5 +1,82 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division, print_function, unicode_literals
+
+import operator
+import requests
+import sys
+
+from bs4 import BeautifulSoup
+from datetime import datetime, date
+from requests.adapters import HTTPAdapter
+
+try:
+    from urlparse import urlparse, parse_qs
+except ImportError:
+    from urllib.parse import urlparse, parse_qs
+
+# ----------------------------------------------------------------------------
+# ------------------ Python 2 / Python 3 Compatibility -----------------------
+# ----------------------------------------------------------------------------
+
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+if not PY2:
+    text_type = str
+    string_types = (str,)
+    unichr = chr
+    inp = input
+    _iterkeys = 'keys'
+    _itervalues = 'values'
+    _iteritems = 'items'
+    _iterlists = 'lists'
+
+    def b(s):
+        return s.encode('utf-8')
+
+    def u(s):
+        return s
+
+    def a(s):
+        return s
+else:
+    text_type = unicode
+    string_types = (str, unicode)
+    unichr = unichr
+    inp = raw_input
+    _iterkeys = 'iterkeys'
+    _itervalues = 'itervalues'
+    _iteritems = 'iteritems'
+    _iterlists = 'iterlists'
+
+    def b(s):
+        return s
+
+    def u(s):
+        return unicode(s, 'unicode_escape')
+
+    def a(s):
+        return s.encode('ascii', 'ignore')
+
+
+def iterkeys(d, **kw):
+    """Return an iterator over the keys of a dictionary."""
+    return iter(getattr(d, _iterkeys)(**kw))
+
+def itervalues(d, **kw):
+    """Return an iterator over the values of a dictionary."""
+    return iter(getattr(d, _itervalues)(**kw))
+
+def iteritems(d, **kw):
+    """Return an iterator over the (key, value) pairs of a dictionary."""
+    return iter(getattr(d, _iteritems)(**kw))
+
+def iterlists(d, **kw):
+    """Return an iterator over the (key, [values]) pairs of a dictionary."""
+    return iter(getattr(d, _iterlists)(**kw))
+# ----------------------------------------------------------------------------
+
 
 class UTN(object):
     """UTN"""
@@ -99,6 +176,8 @@ class FRRe(UTN):
         calendar_append = calendar.append
         stripper = text_type.strip
 
+        calendario = Calendario()
+
         for row in calendar_html:
             columns = row.select('td')
 
@@ -129,7 +208,12 @@ class FRRe(UTN):
                 fecha_hasta = None
 
             calendar_append((fecha_desde, fecha_hasta, stripper(columns[-1].text)))
-        return calendar
+
+            item_calendario = ItemCalendario(fecha_desde,
+                                             fecha_hasta,
+                                             stripper(columns[-1].text))
+            calendario.add_item(item_calendario)
+        return calendario
 
     def get_tsa_gies_tsp_calendar(self):
         """
@@ -198,3 +282,56 @@ class FRRe(UTN):
 
             calendar_append((fecha_feriado, stripper(columns[-1].text)))
         return calendar
+
+
+class Calendario(object):
+    def __init__(self):
+        self._items = []
+
+    @property
+    def items(self):
+        return self._items
+
+    @items.setter
+    def items(self, items_list):
+        self._items = items_list
+
+    def add_item(self, item):
+        if isinstance(item, ItemCalendario):
+            self._items.append(item)
+
+
+class ItemCalendario(object):
+    def __init__(self, fecha_desde, fecha_hasta, actividad):
+        self._fecha_desde = fecha_desde
+        self._fecha_hasta = fecha_hasta
+        self._actividad = actividad
+
+    @property
+    def fecha_desde(self):
+        return self._fecha_desde
+
+    @fecha_desde.setter
+    def fecha_desde(self, fecha):
+        self._fecha_desde = fecha
+
+    @property
+    def fecha_hasta(self):
+        return self._fecha_hasta
+
+    @fecha_hasta.setter
+    def fecha_hasta(self, fecha):
+        self._fecha_hasta = fecha
+
+    @property
+    def actividad(self):
+        return self._actividad
+
+    @actividad.setter
+    def actividad(self, descripcion):
+        self._actividad = descripcion
+
+
+if __name__ == '__main__':
+    frre = FRRe()
+    print(frre.get_isi_iem_iq_lar_calendar())

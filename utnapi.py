@@ -4,19 +4,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import logging
-import operator
-import os
-import requests
 import sys
-
-try:
-    from urlparse import urlparse, parse_qs
-except ImportError:
-    from urllib.parse import urlparse, parse_qs
-
-from bs4 import BeautifulSoup
-from datetime import datetime, date
-from requests.adapters import HTTPAdapter
 
 from sysacad import SysAcad, Examen
 from utn import UTN, FRRe
@@ -29,6 +17,7 @@ from flask.views import MethodView
 # ----------------------------------------------------------------------------
 # ------------------ Python 2 / Python 3 Compatibility -----------------------
 # ----------------------------------------------------------------------------
+
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
@@ -37,13 +26,13 @@ if not PY2:
     string_types = (str,)
     unichr = chr
     inp = input
-    _iterkeys = "keys"
-    _itervalues = "values"
-    _iteritems = "items"
-    _iterlists = "lists"
+    _iterkeys = 'keys'
+    _itervalues = 'values'
+    _iteritems = 'items'
+    _iterlists = 'lists'
 
     def b(s):
-        return s.encode("utf-8")
+        return s.encode('utf-8')
 
     def u(s):
         return s
@@ -55,16 +44,16 @@ else:
     string_types = (str, unicode)
     unichr = unichr
     inp = raw_input
-    _iterkeys = "iterkeys"
-    _itervalues = "itervalues"
-    _iteritems = "iteritems"
-    _iterlists = "iterlists"
+    _iterkeys = 'iterkeys'
+    _itervalues = 'itervalues'
+    _iteritems = 'iteritems'
+    _iterlists = 'iterlists'
 
     def b(s):
         return s
 
     def u(s):
-        return unicode(s, "unicode_escape")
+        return unicode(s, 'unicode_escape')
 
     def a(s):
         return s.encode('ascii', 'ignore')
@@ -101,9 +90,37 @@ app = Flask(__name__, static_url_path = "")
 api = Api(app)
 auth = HTTPBasicAuth()
 
-@app.route('/')
-def hello():
-    return 'Welcome to UTN API!'
+@auth.get_password
+def get_password(username):
+    if username == 'ssebastianj':
+        return 'python'
+    return None
+
+@auth.error_handler
+def unauthorized():
+    # return 403 instead of 401 to prevent browsers from displaying the default auth dialog
+    return make_response(jsonify({'message': 'Unauthorized access'}), 403)
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return make_response(jsonify({'message': 'Resource not found',
+                                  'status': 404}), 404)
+
+
+class CalendarListAPI(Resource):
+    def get(self):
+        return {}
+
+
+class CalendarAPI(Resource):
+    def get(self, id):
+        frre = FRRe()
+        calendar = frre.get_isi_iem_iq_lar_calendar()
+        return {'calendar': calendar.items[1].fecha_desde}
+
+api.add_resource(CalendarListAPI, a('/v1/calendars'), endpoint = a('calendars'))
+api.add_resource(CalendarAPI, a('/v1/calendars/<int:id>'), endpoint = a('calendar'))
+
 
 if __name__ == '__main__':
-    app.run(debug = True)
+    app.run(debug=True)
