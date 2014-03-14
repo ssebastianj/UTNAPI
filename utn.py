@@ -176,8 +176,6 @@ class FRRe(UTN):
         calendar_append = calendar.append
         stripper = text_type.strip
 
-        calendario = Calendario()
-
         for row in calendar_html:
             columns = row.select('td')
 
@@ -186,11 +184,14 @@ class FRRe(UTN):
                 fd_year = int(fecha_desde[2])
                 fd_month = int(fecha_desde[1])
                 fd_day = int(fecha_desde[0])
-                fecha_desde = date(fd_year, fd_month, fd_day)
+                fecha_desde = {'year': fd_year,
+                               'month': fd_month,
+                               'day': fd_day
+                               }
             except ValueError:
                 fd_days = fecha_desde[0].replace('y', ',').split(',')
-                fecha_desde = tuple(date(fd_year, fd_month, int(fd_day))
-                                    for fd_day in fd_days)
+                fecha_desde = [{'year': fd_year, 'month': fd_month, 'day': fd_day}
+                              for fd_day in fd_days]
             except (IndexError, TypeError):
                 fecha_desde = None
 
@@ -199,21 +200,19 @@ class FRRe(UTN):
                 fh_year = int(fecha_hasta[2])
                 fh_month = int(fecha_hasta[1])
                 fh_day = int(fecha_hasta[0])
-                fecha_hasta = date(fh_year, fh_month, fh_day)
+                fecha_hasta = {'year': fh_year, 'month': fh_month, 'day': fh_day}
             except ValueError:
                 fh_days = fecha_hasta[0].replace('y', ',').split(',')
-                fecha_hasta = tuple(date(fh_year, fh_month, int(fd_day))
-                                    for fd_day in fh_days)
+                fecha_hasta = [{'year': fh_year, 'month': fh_month, 'day': fh_day}
+                              for fh_day in fh_days]
             except (IndexError, TypeError):
                 fecha_hasta = None
 
-            calendar_append((fecha_desde, fecha_hasta, stripper(columns[-1].text)))
+            calendar_append({'fecha_desde': fecha_desde,
+                             'fecha_hasta': fecha_hasta,
+                             'actividad': stripper(columns[-1].text)})
 
-            item_calendario = ItemCalendario(fecha_desde,
-                                             fecha_hasta,
-                                             stripper(columns[-1].text))
-            calendario.add_item(item_calendario)
-        return calendario
+        return calendar
 
     def get_tsa_gies_tsp_calendar(self):
         """
@@ -231,11 +230,14 @@ class FRRe(UTN):
                 fd_year = int(fecha_desde[2])
                 fd_month = int(fecha_desde[1])
                 fd_day = int(fecha_desde[0])
-                fecha_desde = date(fd_year, fd_month, fd_day)
+                fecha_desde = {'year': fd_year,
+                               'month': fd_month,
+                               'day': fd_day
+                               }
             except ValueError:
                 fd_days = fecha_desde[0].replace('y', ',').split(',')
-                fecha_desde = tuple(date(fd_year, fd_month, int(fh_day))
-                                    for fh_day in fd_days)
+                fecha_desde = [{'year': fd_year, 'month': fd_month, 'day': fd_day}
+                              for fd_day in fd_days]
             except (IndexError, TypeError):
                 fecha_desde = None
 
@@ -244,15 +246,21 @@ class FRRe(UTN):
                 fh_year = int(fecha_hasta[2])
                 fh_month = int(fecha_hasta[1])
                 fh_day = int(fecha_hasta[0])
-                fecha_hasta = date(fh_year, fh_month, fh_day)
+                fecha_hasta = {'year': fh_year,
+                               'month': fh_month,
+                               'day': fh_day
+                               }
             except ValueError:
                 fh_days = fecha_hasta[0].replace('y', ',').split(',')
-                fecha_hasta = tuple(date(fh_year, fh_month, int(fh_day))
-                                    for fh_day in fh_days)
+                fecha_hasta = [{'year': fh_year, 'month': fh_month, 'day': fh_day}
+                              for fh_day in fh_days]
             except (IndexError, TypeError):
                 fecha_hasta = None
 
-            calendar_append((fecha_desde, fecha_hasta, stripper(columns[-1].text)))
+            calendar_append({'fecha_desde': fecha_desde,
+                             'fecha_hasta': fecha_hasta,
+                             'actividad': stripper(columns[-1].text)})
+
         return calendar
 
     def get_feriados_calendar(self):
@@ -274,13 +282,15 @@ class FRRe(UTN):
             days = fer_date[:-1]
             month_str = fer_date[-1].lower()
 
-            fecha_feriado = tuple(date(calendar_year,
-                                       months.get(month_str, 1),
-                                       int(dia))
-                                  for dia in days
-                                  if dia.isdigit())
+            fecha_feriado = [{'year': calendar_year,
+                              'month': months.get(month_str, 1),
+                              'day': int(dia)}
+                             for dia in days
+                             if dia.isdigit()]
 
-            calendar_append((fecha_feriado, stripper(columns[-1].text)))
+            calendar_append({'fecha_desde': fecha_feriado,
+                             'actividad': stripper(columns[-1].text)})
+
         return calendar
 
 
@@ -333,5 +343,14 @@ class ItemCalendario(object):
 
 
 if __name__ == '__main__':
+    import logging
+
+    # -------------------------- Logging Config ----------------------------------
+    logging.basicConfig(level=logging.DEBUG,
+                        format="[%(levelname)s] : %(message)s")
+    logging.basicConfig(level=logging.INFO,
+                        format="[%(levelname)s] : %(message)s")
+    # ----------------------------------------------------------------------------
+
     frre = FRRe()
-    print(frre.get_isi_iem_iq_lar_calendar())
+    logging.debug(frre.get_isi_iem_iq_lar_calendar())

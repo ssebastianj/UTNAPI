@@ -109,14 +109,26 @@ def page_not_found(error):
 
 class CalendarListAPI(Resource):
     def get(self):
-        return {}
+        frre = FRRe()
+        return {'calendars': [{'calendar': frre.get_isi_iem_iq_lar_calendar(), 'id': 0},
+                              {'calendar': frre.get_tsa_gies_tsp_calendar(), 'id': 1},
+                              {'calendar': frre.get_feriados_calendar(), 'id': 2}]}
 
 
 class CalendarAPI(Resource):
     def get(self, id):
         frre = FRRe()
-        calendar = frre.get_isi_iem_iq_lar_calendar()
-        return {'calendar': calendar.items[1].fecha_desde}
+
+        if id == 0:
+            calendar = frre.get_isi_iem_iq_lar_calendar()
+        elif id == 1:
+            calendar = frre.get_tsa_gies_tsp_calendar()
+        elif id == 2:
+            calendar = frre.get_feriados_calendar()
+        else:
+            abort(404)
+
+        return {'calendar': calendar}
 
 api.add_resource(CalendarListAPI, a('/v1/calendars'), endpoint = a('calendars'))
 api.add_resource(CalendarAPI, a('/v1/calendars/<int:id>'), endpoint = a('calendar'))
