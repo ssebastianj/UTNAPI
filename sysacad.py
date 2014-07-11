@@ -280,6 +280,10 @@ class SysAcad(object):
     def get_examenes_alumno(self, force_refresh=False):
         """
         """
+        # Check login status
+        if self._sa_session is None:
+            self.login()
+
         # Check cache
         if not force_refresh and 'examenes' in self._sa_cache:
             logging.info('Loading examenes from cache...')
@@ -484,6 +488,150 @@ class SysAcad(object):
 
         return examen
 
+    def get_materias_plan(self, force_refresh=False):
+        """
+        """
+        # Check login status
+        if self._sa_session is None:
+            self.login()
+
+        # Check cache
+        if not force_refresh and 'materias_plan' in self._sa_cache:
+            logging.info('Loading materias_plan from cache...')
+            return self._sa_cache['materias_plan']
+
+        # Define browser headers
+        headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36',
+                   'Content-Type': 'application/x-www-form-urlencoded',
+                   'Accept-Encoding': 'gzip,deflate,sdch',
+                   'Accept-Language': 'es-ar,es;q=0.8,en-us;q=0.5,en;q=0.3',
+                   'Connection': 'keep-alive',
+                   'DNT': '1'
+                   }
+
+        data = {'id': self._alum_id}
+        materias_plan_url = '{0}{1}'.format(self._sa_url, self._alum_mat_plan_url)
+        response = None
+
+        try:
+            response = self._sa_session.get(materias_plan_url,
+                                            headers=headers,
+                                            params=data,
+                                            allow_redirects=True,
+                                            stream=False)
+        except (requests.ConnectionError,
+                requests.HTTPError,
+                requests.Timeout) as e:
+            print(e)
+
+        try:
+            soup = BeautifulSoup(response.content)
+            materias_plan_rows = soup.select('tr.textoTabla')
+            plan_anio = soup.select('td.tituloTabla')
+        except Exception:  # FIXME: Agregar excepción adecuada
+            pass
+
+        stripper = text_type.strip
+        lowerer = text_type.lower
+        materias_plan = []
+        materias_plan_append = materias_plan.append
+
+        # Skip table headers
+        for row in materias_plan_rows[1:]:
+            materia_td = row.select('td')
+
+            materia_anio = int(materia_td[0].text)
+            materia_nombre = stripper(materia_td[2].text)
+            materia_dictado = lowerer(stripper(materia_td[1].text))
+            materia_se_cursa = lowerer(stripper(materia_td[3].text)) == 'si'
+            materia_se_rinde = lowerer(stripper(materia_td[4].text)) == 'si'
+
+            materias_plan_append({'anio': materia_anio,
+                                  'materia': materia_nombre,
+                                  'dictado': materia_dictado,
+                                  'se_cursa': materia_se_cursa,
+                                  'se_rinde': materia_se_rinde
+                                  })
+
+        materias_plan_pkg = {'plan': int(plan_anio[0].text.split()[-1]),
+                             'materias': materias_plan
+                             }
+
+        # Update cache
+        self._sa_cache['materias_plan'] = materias_plan_pkg
+
+        return materias_plan_pkg
+
+    def get_estado_academico(self, force_refresh=False):
+        """
+        """
+        # Check login status
+        if self._sa_session is None:
+            self.login()
+
+        # Check cache
+        if not force_refresh and 'estado_academico' in self._sa_cache:
+            logging.info('Loading estado_academico from cache...')
+            return self._sa_cache['estado_academico']
+
+        # Define browser headers
+        headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36',
+                   'Content-Type': 'application/x-www-form-urlencoded',
+                   'Accept-Encoding': 'gzip,deflate,sdch',
+                   'Accept-Language': 'es-ar,es;q=0.8,en-us;q=0.5,en;q=0.3',
+                   'Connection': 'keep-alive',
+                   'DNT': '1'
+                   }
+
+        data = {'id': self._alum_id}
+        estado_academico_url = '{0}{1}'.format(self._sa_url, self._alum_est_acad_url)
+        response = None
+
+        try:
+            response = self._sa_session.get(estado_academico_url,
+                                            headers=headers,
+                                            params=data,
+                                            allow_redirects=True,
+                                            stream=False)
+        except (requests.ConnectionError,
+                requests.HTTPError,
+                requests.Timeout) as e:
+            print(e)
+
+        try:
+            soup = BeautifulSoup(response.content)
+            estado_academico_rows = soup.select('tr.textoTabla')
+            plan_anio = soup.select('td.tituloTabla')
+        except Exception:  # FIXME: Agregar excepción adecuada
+            pass
+
+        stripper = text_type.strip
+        lowerer = text_type.lower
+        estado_academico = []
+        estado_academico_append = estado_academico.append
+
+        # Skip table headers
+        for row in estado_academico_rows[1:]:
+            estado_acad_td = row.select('td')
+
+            estado_acad_anio = int(estado_acad_td[0].text)
+            estado_acad_nombre = stripper(estado_acad_td[1].text)
+            estado_acad_status = stripper(estado_acad_td[2].text)
+            estado_acad_plan = int(estado_acad_td[3].text)
+
+            estado_academico_append({'anio': estado_acad_anio,
+                                     'materia': estado_acad_nombre,
+                                     'estado': estado_acad_status,
+                                     'plan': estado_acad_plan
+                                     })
+
+        # Update cache
+        self._sa_cache['estado_academico'] = estado_academico
+
+        return estado_academico
+
 
 class Examen(object):
     """Examen"""
@@ -531,3 +679,20 @@ class Examen(object):
         """
         """
         return self._fecha
+
+
+if __name__ == '__main__':
+    import logging
+
+    # -------------------------- Logging Config ----------------------------------
+    logging.basicConfig(level=logging.DEBUG,
+                        format="[%(levelname)s] : %(message)s")
+    logging.basicConfig(level=logging.INFO,
+                        format="[%(levelname)s] : %(message)s")
+    # ----------------------------------------------------------------------------
+
+    legajo = 00000
+    password = '00000'
+    sysacad = SysAcad(legajo, password)
+    logging.debug(sysacad.get_materias_plan())
+    logging.debug(sysacad.get_estado_academico())

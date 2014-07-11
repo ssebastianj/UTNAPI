@@ -1,4 +1,3 @@
-#!venv/bin/python
 # -*- coding: utf-8 -*-
 
 from __future__ import division, print_function, unicode_literals
@@ -63,13 +62,16 @@ def iterkeys(d, **kw):
     """Return an iterator over the keys of a dictionary."""
     return iter(getattr(d, _iterkeys)(**kw))
 
+
 def itervalues(d, **kw):
     """Return an iterator over the values of a dictionary."""
     return iter(getattr(d, _itervalues)(**kw))
 
+
 def iteritems(d, **kw):
     """Return an iterator over the (key, value) pairs of a dictionary."""
     return iter(getattr(d, _iteritems)(**kw))
+
 
 def iterlists(d, **kw):
     """Return an iterator over the (key, [values]) pairs of a dictionary."""
@@ -86,9 +88,10 @@ logging.basicConfig(level=logging.INFO,
 
 
 # Flask App
-app = Flask(__name__, static_url_path = "")
+app = Flask(__name__, static_url_path="")
 api = Api(app)
 auth = HTTPBasicAuth()
+
 
 @auth.get_password
 def get_password(username):
@@ -96,10 +99,12 @@ def get_password(username):
         return 'python'
     return None
 
+
 @auth.error_handler
 def unauthorized():
     # return 403 instead of 401 to prevent browsers from displaying the default auth dialog
     return make_response(jsonify({'message': 'Unauthorized access'}), 403)
+
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -130,8 +135,8 @@ class CalendarAPI(Resource):
 
         return {'calendar': calendar}
 
-api.add_resource(CalendarListAPI, a('/v1/calendars'), endpoint = a('calendars'))
-api.add_resource(CalendarAPI, a('/v1/calendars/<int:id>'), endpoint = a('calendar'))
+api.add_resource(CalendarListAPI, a('/v1/calendars'), endpoint=a('calendars'))
+api.add_resource(CalendarAPI, a('/v1/calendars/<int:id>'), endpoint=a('calendar'))
 
 
 if __name__ == '__main__':

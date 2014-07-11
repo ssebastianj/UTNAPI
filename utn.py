@@ -294,54 +294,6 @@ class FRRe(UTN):
         return calendar
 
 
-class Calendario(object):
-    def __init__(self):
-        self._items = []
-
-    @property
-    def items(self):
-        return self._items
-
-    @items.setter
-    def items(self, items_list):
-        self._items = items_list
-
-    def add_item(self, item):
-        if isinstance(item, ItemCalendario):
-            self._items.append(item)
-
-
-class ItemCalendario(object):
-    def __init__(self, fecha_desde, fecha_hasta, actividad):
-        self._fecha_desde = fecha_desde
-        self._fecha_hasta = fecha_hasta
-        self._actividad = actividad
-
-    @property
-    def fecha_desde(self):
-        return self._fecha_desde
-
-    @fecha_desde.setter
-    def fecha_desde(self, fecha):
-        self._fecha_desde = fecha
-
-    @property
-    def fecha_hasta(self):
-        return self._fecha_hasta
-
-    @fecha_hasta.setter
-    def fecha_hasta(self, fecha):
-        self._fecha_hasta = fecha
-
-    @property
-    def actividad(self):
-        return self._actividad
-
-    @actividad.setter
-    def actividad(self, descripcion):
-        self._actividad = descripcion
-
-
 if __name__ == '__main__':
     import logging
 
