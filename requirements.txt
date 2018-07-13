@@ -1,13 +1,19 @@
-Flask==0.10.1
-Flask-HTTPAuth==2.2.0
-Flask-RESTful==0.2.12
-Jinja2==2.7.2
-MarkupSafe==0.19
-Werkzeug==0.9.4
-aniso8601==0.82
-beautifulsoup4==4.3.2
-gunicorn==18.0
-itsdangerous==0.23
-pytz==2013.9
-requests==2.2.1
-six==1.5.2
+-i https://pypi.org/simple
+aniso8601==3.0.2
+beautifulsoup4==4.6.0
+certifi==2018.4.16
+chardet==3.0.4
+click==6.7
+flask-httpauth==3.2.4
+flask-restful==0.3.6
+flask==1.0.2
+gunicorn==19.9.0
+idna==2.7
+itsdangerous==0.24
+jinja2==2.10
+markupsafe==1.0
+pytz==2018.5
+requests==2.19.1
+six==1.11.0
+urllib3==1.23; python_version < '4'
+werkzeug==0.14.1
